@@ -1,0 +1,63 @@
+.ant-input {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 215, 0, 0.2) !important;
+  color: #a0a0a0 !important;
+}
+
+.ant-input:hover {
+  border-color: rgba(255, 215, 0, 0.4) !important;
+}
+
+.ant-input:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2) !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #ffd700, #ffed4e) !important;
+  border: none !important;
+  color: #0a0e27 !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4) !important;
+}
+
+.ant-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #e0e0e0 !important;
+}
+
+.ant-drawer-content-wrapper {
+  background: #1a1a3e !important;
+}
+
+.ant-drawer-header {
+  background: #0a0e27 !important;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2) !important;
+}
+
+.ant-drawer-title {
+  color: #ffd700 !important;
+  font-family: 'Georgia', serif !important;
+}
+
+.ant-modal-content {
+  background: #1a1a3e !important;
+}
+
+.ant-modal-title {
+  color: #ffd700 !important;
+  font-family: 'Georgia', serif !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ant-statistic-content {
+    font-size: 2em !important;
+  }
+}
