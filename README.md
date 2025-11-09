@@ -1,4 +1,4 @@
-## Escape Room 001: The Hourglass of Life – Full Summary
+## Escape Room 001: The Hourglass of Life
 
 ```bash
 npm run dev

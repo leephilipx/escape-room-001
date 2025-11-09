@@ -30,9 +30,9 @@
 - Only **one QR code/IP/website** points to the central portal on the local network.
 - Encourages observation and teamwork.
 - Portal welcome message
-  ** “Welcome, seekers of fortune and wisdom. You have entered the Hourglass Realm, where treasures and secrets are scattered across the sands of time.
-  ** Around you lie hints, fragments, and symbols — some small, some grand. Some may guide you to wealth, influence, and status; others may point to the things that make life meaningful.  
-  ** Time is short, and every moment counts. Work together, observe carefully, and gather what seems valuable — only then will the final gateway reveal itself.”
+  - “Welcome, seekers of fortune and wisdom. You have entered the Hourglass Realm, where treasures and secrets are scattered across the sands of time.
+  - Around you lie hints, fragments, and symbols — some small, some grand. Some may guide you to wealth, influence, and status; others may point to the things that make life meaningful.  
+  - Time is short, and every moment counts. Work together, observe carefully, and gather what seems valuable — only then will the final gateway reveal itself.”
 - Portal dashboard reveals:
   - Countdown timer (life’s brevity) with random noise
   - Hint system
@@ -119,7 +119,7 @@
 
 ---
 
-## Credits
+## Acknowledgements
 
 - Storyline and Puzzle Idea: ChatGPT
 - Intro Video: Veo3.1, Lyria2, Clipchamp

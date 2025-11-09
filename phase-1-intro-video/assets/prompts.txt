@@ -1,0 +1,8 @@
+-- Video (1 x $0.60) --
+
+Create a 4-second cinematic video starting from complete black. Slowly, faint glowing particles and dust appear, suggesting a mystical space. Gradually reveal scattered objects: torn scrolls, abstract symbols, faintly glowing hourglasses, and subtle hints of worldly items like coins, family icons, and career symbols. In the distance, a shimmering portal begins to glow, drawing attention. The camera slowly pans toward the portal as a soft whispering voice-over or text overlay appears: “Time is fleeting. Seek the hidden gateway… the portal awaits.” Make the scene atmospheric, mysterious, and intriguing, nudging players to explore and find the portal.
+
+
+-- Audio (2 x $0.06) --
+
+Starting from complete black. Slowly, faint glowing particles and dust appear, suggesting a mystical space. Gradually reveal scattered objects: torn scrolls, abstract symbols, faintly glowing hourglasses, and subtle hints of worldly items like coins, family icons, and career symbols. In the distance, a shimmering portal begins to glow, drawing attention. The camera slowly pans toward the portal. Make the scene atmospheric, mysterious, and intriguing, nudging players to explore and find the portal.
