@@ -132,13 +132,6 @@
   white-space: pre-line;
 }
 
-/* Input Container */
-/* .input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-} */
-
 /* Canvas */
 .canvas-container {
   position: relative;

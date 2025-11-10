@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, message, Spin, Card, Row, Col, Statistic, Drawer } from 'antd';
-import { BulbOutlined, FieldTimeOutlined, LockOutlined, RiseOutlined } from '@ant-design/icons';
+import { Button, Input, FloatButton, message, Spin, Card, Row, Col, Statistic, Drawer } from 'antd';
+import { BulbOutlined, FieldTimeOutlined, LockOutlined, QuestionOutlined, RiseOutlined } from '@ant-design/icons';
 
 import ChatbotModal from './ChatbotModal';
 import { setCookie, getCookie } from '../utils/cookie';
 import { API_BASE_URL, POLL_INTERVAL } from '../utils/constants';
+import './Portal.css'
 import '../styles/antd-override.css';
 import '../styles/background.css';
 import '../styles/glitch.css';
@@ -33,12 +34,26 @@ const Portal: React.FC = () => {
   const [showChatbot, setShowChatbot] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const previousHintsCountRef = useRef<number>(0);
 
   // Persist portal state and token for 1 hour
   useEffect(() => {
     setCookie("portalState", portalState, 60);
     setCookie("portalToken", portalToken, 60);
   }, [portalState, portalToken]);
+
+  // Detect hints increase
+  useEffect(() => {
+    if (gameData?.hints) {
+      const currentHintsCount = gameData.hints.length;
+      const previousHintsCount = previousHintsCountRef.current;
+      if (currentHintsCount > previousHintsCount) {
+        const newHintsCount = currentHintsCount - previousHintsCount;
+        messageToast.info(`New hint${newHintsCount > 1 ? 's' : ''} available!`);
+      }
+      previousHintsCountRef.current = currentHintsCount;
+    }
+  }, [gameData?.hints, messageToast]);
 
   // Enter the game
   const handleEnter = async () => {
@@ -118,7 +133,7 @@ const Portal: React.FC = () => {
     if (gameData?.remaining_time) {
       const updateTimer = () => {
         const randomJitter = Math.floor((1.0-Math.random()) * 60); // -30 to 30 seconds
-        const time = calculateTimeRemaining(gameData.remaining_time, randomJitter);
+        const time = unlocked ? '00:00:00' : calculateTimeRemaining(gameData.remaining_time, randomJitter);
         setTimeRemaining(time);
       };
       updateTimer();
@@ -135,6 +150,11 @@ const Portal: React.FC = () => {
   const handleUnlock = async () => {
     if (!portalToken) return;
     setLoading(true);
+    if (unlocked) {
+      setPortalState('completed');
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch(`${API_BASE_URL}/unlock`, {
         method: 'POST',
@@ -146,8 +166,7 @@ const Portal: React.FC = () => {
       });
       if (response.ok) {
         setUnlocked(true);
-        messageToast.success('The Wisdom Gateway has opened!');
-        setPassphrase('');
+        setPortalState('completed');
       } else {
         messageToast.error('Incorrect passphrase');
       }
@@ -155,17 +174,18 @@ const Portal: React.FC = () => {
       messageToast.error('Connection error');
       console.error(error);
     } finally {
+      setPassphrase('');
       setLoading(false);
     }
   };
 
   // Dev: Clear cookies to reset state
-  const devClearCookies = () => {
-    setCookie('portalState', 'welcome', -1);
-    setCookie('portalToken', '', -1);
-    messageToast.success('[Dev] Cookies cleared');
-    window.location.reload();
-  };
+  // const devClearCookies = () => {
+  //   setCookie('portalState', 'welcome', -1);
+  //   setCookie('portalToken', '', -1);
+  //   messageToast.success('[Dev] Cookies cleared');
+  //   window.location.reload();
+  // };
 
   // Welcome Screen
   if (portalState === 'welcome') {
@@ -189,7 +209,7 @@ const Portal: React.FC = () => {
           <h1 className="welcome-title">Hourglass Realm</h1>
           <div className="welcome-text">
             <p>Welcome, seekers of fortune and wisdom. You stand at gates of the Hourglass Realm, where treasures and secrets are scattered across the sands of time.</p>
-            <p style={{ color: "#6496c8", fontWeight: 800, letterSpacing: -1}}>Only one explorer may enter the portal at a time.</p>
+            <p style={{ color: "#6496c8", fontWeight: 800, letterSpacing: -1}}>Only one seeker may enter the portal at a time.</p>
           </div>
           <Button
             type="primary"
@@ -201,6 +221,21 @@ const Portal: React.FC = () => {
             ENTER
           </Button>
         </div>
+
+        {/* Credits Button */}
+        {unlocked && (
+          <FloatButton
+            type="default"
+            tooltip="Credits"
+            shape="circle"
+            href="/#/credits"
+            target="_blank"
+            icon={<QuestionOutlined />}
+            className="credits-button"
+          >
+            Credits
+          </FloatButton>
+        )}
       </div>
     );
   }
@@ -255,16 +290,10 @@ const Portal: React.FC = () => {
                 block
                 onClick={handleUnlock}
                 loading={loading}
-                disabled={unlocked}
                 style={{ marginTop: 16 }}
               >
                 {unlocked ? '✓ Gateway Unlocked' : 'Unlock'}
               </Button>
-              {unlocked && (
-                <div style={{ marginTop: 16, padding: 12, background: '#f0f5ff', borderRadius: 4, color: '#1890ff' }}>
-                  🎉 The Wisdom Gateway has revealed its secrets!
-                </div>
-              )}
             </Card>
           )}
 
@@ -292,21 +321,21 @@ const Portal: React.FC = () => {
                 onClick={() => setShowChatbot(true)}
                 size="large"
               >
-                Treasure
+                Treasure Guardian
               </Button>
             </Col>
           </Row>
           
           {/* Dev: Clear Cookies Button */}
-          <br/>
+          {/* <br/>
           <Button
             type="primary"
             block
-            size="large"
+            size="small"
             onClick={devClearCookies}
           >
             CLEAR COOKIES
-          </Button>
+          </Button> */}
         </div>
 
         {/* Hints Drawer */}
@@ -337,6 +366,78 @@ const Portal: React.FC = () => {
           pins={gameData?.puzzle_1b?.pins || []}
           portalToken={portalToken}
         />
+
+        {/* Credits Button */}
+        {unlocked && (
+            <FloatButton
+              type="default"
+              tooltip="Credits"
+              shape="circle"
+              href="/#/credits"
+              target="_blank"
+              icon={<QuestionOutlined />}
+              className="credits-button"
+            >
+              Credits
+            </FloatButton>
+          )}
+      </div>
+    );
+  }
+
+  // Completion Screen
+  if (portalState === 'completed') {
+
+    console.log(unlocked);
+
+    return (
+      <div className="welcome-container">
+        {messageContextHolder}
+        <div className="image-background"></div>
+        <div className="particles-background">
+          {[...Array(50)].map((_, i) => (
+            <div key={i} className="particle" style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 4}s`,
+            }} />
+          ))}
+        </div>
+
+        <div className="welcome-content">
+          <div className="portal-glow"></div>
+          <h1 className="welcome-title">Hourglass Realm</h1>
+          <div className="welcome-text">
+            <p>The sands of time settle once more. You sought fortune and wisdom, and along the way found teamwork, insight, and meaning.</p>
+            <p>Yet remember — all earthly treasures fade. The true and eternal treasures lie beyond this realm.</p>
+            <p style={{ color: "#64c867ff", fontWeight: 800, letterSpacing: -1}}>Thank you, seekers. The Hourglass Realm will remember your light.</p>
+          </div>
+
+          <Button
+            type="primary"
+            size="large"
+            onClick={() => setPortalState('welcome')}
+            className="enter-button"
+          >
+            Back to Reality
+          </Button>
+
+          {/* Credits Button */}
+          {unlocked && (
+            <FloatButton
+              type="default"
+              tooltip="Credits"
+              shape="circle"
+              href="/#/credits"
+              target="_blank"
+              icon={<QuestionOutlined />}
+              className="credits-button"
+            >
+              Credits
+            </FloatButton>
+          )}
+        </div>
       </div>
     );
   }

@@ -130,7 +130,6 @@ body {
   background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0a0e27 100%);
   overflow-y: auto;
   padding: 20px;
-  animation: fadeIn 1s ease-in;
 }
 
 .main-content {
@@ -139,6 +138,11 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: 20px;
+  animation: fadeIn 1s ease-in;
+}
+
+.main-content .ant-card {
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 .main-title {
@@ -199,6 +203,12 @@ body {
   list-style-position: outside;
   font-family: 'Courier New', Courier, monospace;
   line-height: 1.0
+}
+
+.credits-button .ant-float-btn-body {
+  size: 120%;
+  color: black;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
 }
 
 /* Responsive */

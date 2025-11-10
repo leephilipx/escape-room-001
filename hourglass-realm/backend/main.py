@@ -41,13 +41,10 @@ STATE = {
         'stage1_progress': {'CAR': False, 'HOUSE': False, 'LOVE': False, 'MONEY': False, 'FAMILY': False},
         'stage1_count': 0, 'completed_stage': 0, 'pins': []
     }
-    # 'puzzle_1b': {
-    #     'stage1_progress': {'CAR': True, 'HOUSE': True, 'LOVE': True, 'MONEY': True, 'FAMILY': True},
-    #     'stage1_count': 5, 'completed_stage': 2, 'pins': ['123', '456']
-    # }
 }
 
-ADMIN_TOKEN = os.getenv('ADMIN_TOKEN', 'changeme-admin-token')
+ADMIN_PASSPHRASE = os.getenv('ADMIN_PASSPHRASE', 'changeme-admin-token')
+
 
 class UnlockReq(BaseModel):
     passphrase: str
@@ -60,6 +57,14 @@ class SetTimeReq(BaseModel):
 
 class HintReq(BaseModel):
     hint: str
+
+class AdminUpdate(BaseModel):
+    target_time: str = None
+    hints: list[str] = None
+    passphrase: str = None
+    class Config:
+        extra = "forbid" # Allow partial updates
+
 
 @app.post('/enter')
 async def enter():
@@ -126,29 +131,40 @@ async def chatbot(req: ChatbotReq, authorization: Optional[str] = Header(None)):
                 STATE['puzzle_1b']['pins'].append(os.getenv('GAME_PUZZLE_1B_STAGE_2_PIN', '000'))
     return {'response': response}
 
-# @app.post('/admin/reset')
-# async def admin_reset(authorization: Optional[str] = Header(None)):
-#     if authorization != ADMIN_TOKEN:
-#         raise HTTPException(status_code=403, detail='Admin token required')
-#     STATE['active_token'] = None
-#     STATE['token_claim_time'] = None
-#     STATE['hints'] = []
-#     STATE['target_time'] = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
-#     return {'ok': True}
+@app.get('/admin')
+async def get_admin_state(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Admin passphrase required')
+    passphrase = authorization.split(' ')[1]
+    if ADMIN_PASSPHRASE != passphrase:
+        raise HTTPException(status_code=403, detail='Invalid admin passphrase')
+    return STATE
 
-# @app.post('/admin/set_time')
-# async def admin_set_time(req: SetTimeReq, authorization: Optional[str] = Header(None)):
-#     if authorization != ADMIN_TOKEN:
-#         raise HTTPException(status_code=403, detail='Admin token required')
-#     STATE['target_time'] = (datetime.now(timezone.utc) + timedelta(minutes=req.minutes_from_now)).isoformat()
-#     return {'ok': True, 'target': STATE['target_time']}
-
-# @app.post('/admin/send_hint')
-# async def admin_send_hint(req: HintReq, authorization: Optional[str] = Header(None)):
-#     if authorization != ADMIN_TOKEN:
-#         raise HTTPException(status_code=403, detail='Admin token required')
-#     STATE.setdefault('hints', []).append(req.hint)
-#     return {'ok': True, 'hints': STATE['hints']}
+@app.post("/admin")
+async def update_admin_state(update: AdminUpdate, authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Admin passphrase required')
+    passphrase = authorization.split(' ')[1]
+    if ADMIN_PASSPHRASE != passphrase:
+        raise HTTPException(status_code=403, detail='Invalid admin passphrase')
+    try:
+        if update.target_time is not None:
+            datetime.fromisoformat(update.target_time)
+            STATE['target_time'] = update.target_time
+        if update.hints is not None:
+            if not isinstance(update.hints, list):
+                raise ValueError("hints must be a list")
+            STATE['hints'] = update.hints
+        if update.passphrase is not None:
+            if not isinstance(update.passphrase, str):
+                raise ValueError("passphrase must be a string")
+            STATE['passphrase'] = update.passphrase
+        return STATE   
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
