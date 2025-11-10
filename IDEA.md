@@ -61,8 +61,8 @@
 - **Objective:** Draw 5 “material things” (money, house, car, family, love) or a **cross** (secret bypass).
 - **VLM Recognition:**
   - One-by-one recognition; database tracks inputs.
-  - Cross → correct PIN revealed (7-3-3).
-  - Three material things → dummy PIN revealed (1-2-3).
+  - Stage 1 → Three material things → dummy PIN revealed (3-1-2).
+  - Stage 2 → Cross → correct PIN revealed (7-3-3).
 - **Gameplay / Theme:**
   - Encourages reflection on worldly pursuits.
   - Playful commentary if drawing is messy or wrong.

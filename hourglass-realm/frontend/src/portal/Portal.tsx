@@ -14,7 +14,7 @@ interface GameData {
   hints: string[];
   puzzle_1b: {
     count: number;
-    real: boolean;
+    pins: string[];
   }
 }
 
@@ -239,7 +239,7 @@ const Portal: React.FC = () => {
           </Card>
 
           {/* Passphrase Section */}
-          {gameData?.puzzle_1b?.real && (
+          {(gameData?.puzzle_1b?.pins.length == 2) && (
             <Card className="passphrase-card">
               <h3>Wisdom Gateway</h3>
               <Input
@@ -334,6 +334,7 @@ const Portal: React.FC = () => {
           visible={showChatbot}
           onClose={() => setShowChatbot(false)}
           progressCount={gameData?.puzzle_1b?.count || 0}
+          pins={gameData?.puzzle_1b?.pins || []}
           portalToken={portalToken}
         />
       </div>

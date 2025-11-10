@@ -1,6 +1,6 @@
+fastapi
+langchain
+langchain-google-genai
 pillow
 python-dotenv
-langchain
-langchain-openai
-fastapi
 uvicorn

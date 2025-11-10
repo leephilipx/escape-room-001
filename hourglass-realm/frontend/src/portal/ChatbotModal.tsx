@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Modal, Button, Row, Col, message } from 'antd';
-import { DeleteOutlined, LockOutlined, SendOutlined, CheckOutlined } from '@ant-design/icons';
+import { CheckOutlined, DeleteOutlined, LockOutlined, UploadOutlined } from '@ant-design/icons';
 import './ChatbotModal.css';
-import { API_BASE_URL, CHATBOT_MESSAGE } from '../utils/constants';
+import { API_BASE_URL, CHATBOT_MESSAGES } from '../utils/constants';
 
 interface ChatbotModalProps {
   visible: boolean;
   onClose: () => void;
   progressCount: number;
+  pins: string[];
   portalToken: string;
 }
 
-const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressCount, portalToken }) => {
+const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressCount, pins, portalToken }) => {
+  const [displayedPins, setDisplayedPins] = useState<string[]>([]);
   const [botMessage, setBotMessage] = useState<string>('');
   const [userImage, setUserImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,13 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [drawing, setDrawing] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+
+  const puzzleComplete = (pins.length == 2);
+
+  // Track PINs
+  useEffect(() => {
+    setDisplayedPins(pins);
+  }, [pins]);
 
   // Initialize canvas
   useEffect(() => {
@@ -125,7 +134,7 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
       });
       if (response.ok) {
         const data = await response.json();
-        setBotMessage(data.message);
+        setBotMessage(data.response);
         setCanReset(true);
         setUserImage(null);
       } else {
@@ -173,6 +182,25 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
         ))}
       </div>
 
+      {/* PINs Display */}
+      {pins.length > 0 && (
+        <div className="pin-display-container">
+          {displayedPins.map((pin, index) => (
+            <div
+              key={index}
+              className={`pin-card ${index < displayedPins.length - 1 ? 'expired' : ''}`}
+            >
+              <div className="pin-label">
+                {index < 1 ? 'Unlocked PIN' : 'True PIN'}
+              </div>
+              <div className={`pin-number ${index < displayedPins.length - 1 ? 'expired' : ''}`}>
+                {pin}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <Row gutter={24} style={{ marginTop: 24 }}>
         {/* Bot Message - Left */}
         <Col xs={24} md={12}>
@@ -181,7 +209,7 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
               <img src="/images/avatar-treasure-guardian.jpg" alt="Treasure Guardian" />
             </div>
             <div className="bot-message">
-              {CHATBOT_MESSAGE}
+              {CHATBOT_MESSAGES[pins.length]}
             </div>
           </div>
           {botMessage && (
@@ -212,7 +240,11 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
-                style={{ touchAction: 'none' }} // Prevent scrolling while drawing
+                style={{
+                  touchAction: 'none', // Prevent scrolling while drawing
+                  opacity: (loading || canReset || puzzleComplete) ? 0.5 : 1,
+                  pointerEvents: (loading || canReset || puzzleComplete) ? 'none' : 'auto',
+                }}
               />
             </div>
 
@@ -223,18 +255,18 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
                     type="primary"
                     icon={<DeleteOutlined />}
                     onClick={clearCanvas}
-                    disabled={!userImage}
+                    disabled={!userImage || loading || puzzleComplete}
                   >
                     Clear
                   </Button>
                   <Button
                     type="primary"
-                    icon={<SendOutlined />}
+                    icon={<UploadOutlined />}
                     onClick={submitImage}
                     loading={loading}
-                    disabled={!userImage}
+                    disabled={!userImage || puzzleComplete}
                   >
-                    Send
+                    Submit
                   </Button>
                 </>
               ) : (
@@ -244,7 +276,7 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
                   block
                   size="large"
                 >
-                  New Drawing Submission
+                  New Drawing
                 </Button>
               )}
             </div>
