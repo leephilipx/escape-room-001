@@ -4,17 +4,18 @@ import uvicorn
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional, Dict
 from datetime import datetime, timedelta, timezone
 
-from chatbot import chatbot_pipeline, ObjectCategory2
+from components.chatbot import chatbot_pipeline, ObjectCategory2
+from components.schema import *
 
 
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(env_path):
     from dotenv import load_dotenv
     load_dotenv(env_path)
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,41 +31,50 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-# In-memory state (local only)
-STATE = {
-    'active_token': None,
-    'token_claim_time': None,
-    'target_time': (datetime.now(timezone.utc) + timedelta(minutes=60)).isoformat(),
-    'hints': [],
-    'passphrase': os.getenv('SECRET_PASSPHRASE', 'OPEN'),
-    'puzzle_1b': {
-        'stage1_progress': {'CAR': False, 'HOUSE': False, 'LOVE': False, 'MONEY': False, 'FAMILY': False},
-        'stage1_count': 0, 'completed_stage': 0, 'pins': []
+ADMIN_PASSPHRASE = os.getenv('ADMIN_PASSPHRASE', 'changeme')
+
+
+# ============== Helper Functions ==============
+
+def reset_game_state() -> Dict[str, Any]:
+    return {
+        'active_token': str(uuid.uuid4()),
+        'token_claim_time': datetime.now(timezone.utc).isoformat(),
+        'target_time': (datetime.now(timezone.utc) + timedelta(minutes=60)).isoformat(),
+        'hints': [],
+        'master_codes': {
+            'passphrase': os.getenv('SECRET_PASSPHRASE', 'OPEN'),
+            'puzzle_1b_pins': os.getenv('GAME_PUZZLE_1B_STAGE_PINS', '000,000').split(',')
+        },
+        'puzzle_1b': {
+            'stage1_progress': {'CAR': False, 'HOUSE': False, 'LOVE': False, 'MONEY': False, 'FAMILY': False},
+            'stage1_count': 0, 'completed_stage': 0, 'pins': [],
+        }
     }
-}
 
-ADMIN_PASSPHRASE = os.getenv('ADMIN_PASSPHRASE', 'changeme-admin-token')
+# In-memory state (local only)
+STATE = reset_game_state()
+
+def validate_session_token(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Missing token')
+    tkn = authorization.split(' ')[1]
+    if STATE.get('active_token') != tkn:
+        raise HTTPException(status_code=403, detail='Invalid or expired session token')
+
+def validate_admin_passphrase(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Admin passphrase required')
+    passphrase = authorization.split(' ')[1]
+    if ADMIN_PASSPHRASE != passphrase:
+        raise HTTPException(status_code=403, detail='Invalid admin passphrase')
 
 
-class UnlockReq(BaseModel):
-    passphrase: str
+# ============== API Endpoints ==============
 
-class ChatbotReq(BaseModel):
-    image_data: str
-
-class SetTimeReq(BaseModel):
-    minutes_from_now: int
-
-class HintReq(BaseModel):
-    hint: str
-
-class AdminUpdate(BaseModel):
-    target_time: str = None
-    hints: list[str] = None
-    passphrase: str = None
-    class Config:
-        extra = "forbid" # Allow partial updates
-
+@app.get('/health')
+async def health_check():
+    return {'status': 'ok'}
 
 @app.post('/enter')
 async def enter():
@@ -76,11 +86,7 @@ async def enter():
 
 @app.get('/data')
 async def get_data(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Missing token')
-    tkn = authorization.split(' ')[1]
-    if STATE.get('active_token') != tkn:
-        raise HTTPException(status_code=403, detail='Invalid or expired session token')
+    validate_session_token(authorization)
     return {
         'remaining_time': STATE['target_time'],
         'hints': STATE['hints'],
@@ -92,22 +98,14 @@ async def get_data(authorization: Optional[str] = Header(None)):
 
 @app.post('/unlock')
 async def unlock(req: UnlockReq, authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Missing token')
-    tkn = authorization.split(' ')[1]
-    if STATE.get('active_token') != tkn:
-        raise HTTPException(status_code=403, detail='Invalid session token')
-    if req.passphrase.strip().lower() == STATE.get('passphrase', '').lower():
+    validate_session_token(authorization)
+    if req.passphrase.strip().lower() == STATE['master_codes']['passphrase'].lower():
         return JSONResponse({'unlocked': True})
     raise HTTPException(status_code=403, detail='Wrong passphrase')
 
 @app.post('/chatbot')
 async def chatbot(req: ChatbotReq, authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Missing token')
-    tkn = authorization.split(' ')[1]
-    if STATE.get('active_token') != tkn:
-        raise HTTPException(status_code=403, detail='Invalid or expired session token')
+    validate_session_token(authorization)
     category, response = chatbot_pipeline(req.image_data, completed_stage=STATE['puzzle_1b']['completed_stage'])
     if category:
         if STATE['puzzle_1b']['completed_stage'] == 0:
@@ -118,7 +116,7 @@ async def chatbot(req: ChatbotReq, authorization: Optional[str] = Header(None)):
                 if STATE['puzzle_1b']['stage1_count'] == 5:
                     response += "\n\nAll five drawings? Wowza! You did it! PIN time—uh, where did I put it again?"
                     STATE['puzzle_1b']['completed_stage'] = 1
-                    STATE['puzzle_1b']['pins'].append(os.getenv('GAME_PUZZLE_1B_STAGE_1_PIN', '000'))
+                    STATE['puzzle_1b']['pins'].append(STATE['master_codes']['puzzle_1b_pins'][0])
                 else:
                     response += f"\n\nYou've found the {category_str} drawing, only {5 - STATE['puzzle_1b']['stage1_count']} more—right? I think so!"
             else:
@@ -128,25 +126,17 @@ async def chatbot(req: ChatbotReq, authorization: Optional[str] = Header(None)):
             if category == ObjectCategory2.JESUS:
                 response = ''
                 STATE['puzzle_1b']['completed_stage'] = 2
-                STATE['puzzle_1b']['pins'].append(os.getenv('GAME_PUZZLE_1B_STAGE_2_PIN', '000'))
+                STATE['puzzle_1b']['pins'].append(STATE['master_codes']['puzzle_1b_pins'][1])
     return {'response': response}
 
 @app.get('/admin')
 async def get_admin_state(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Admin passphrase required')
-    passphrase = authorization.split(' ')[1]
-    if ADMIN_PASSPHRASE != passphrase:
-        raise HTTPException(status_code=403, detail='Invalid admin passphrase')
+    validate_admin_passphrase(authorization)
     return STATE
 
 @app.post("/admin")
 async def update_admin_state(update: AdminUpdate, authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        raise HTTPException(status_code=401, detail='Admin passphrase required')
-    passphrase = authorization.split(' ')[1]
-    if ADMIN_PASSPHRASE != passphrase:
-        raise HTTPException(status_code=403, detail='Invalid admin passphrase')
+    validate_admin_passphrase(authorization)
     try:
         if update.target_time is not None:
             datetime.fromisoformat(update.target_time)
@@ -158,13 +148,22 @@ async def update_admin_state(update: AdminUpdate, authorization: Optional[str] =
         if update.passphrase is not None:
             if not isinstance(update.passphrase, str):
                 raise ValueError("passphrase must be a string")
-            STATE['passphrase'] = update.passphrase
-        return STATE   
+            STATE['master_codes']['passphrase'] = update.passphrase
+        if update.puzzle_1b_pins is not None:
+            if not isinstance(update.puzzle_1b_pins, list):
+                raise ValueError("puzzle_1b_pins must be a list")
+            STATE['master_codes']['puzzle_1b_pins'] = update.puzzle_1b_pins
+        return STATE
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
+@app.post("/reset")
+async def reset_admin_state(authorization: Optional[str] = Header(None)):
+    validate_admin_passphrase(authorization)
+    return reset_game_state()
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
