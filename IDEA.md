@@ -121,6 +121,6 @@
 
 ## Acknowledgements
 
-- Storyline and Puzzle Idea: ChatGPT
-- Intro Video: Veo3.1, Lyria2, Clipchamp
-- Hourglass Realm Portal: Imagen4, ChatGPT, Claude Haiku 4.5
+- Storyline: ChatGPT
+- Intro Video: Veo 3.1, Lyria 2, Clipchamp
+- Hourglass Realm Portal: ChatGPT, Claude Haiku 4.5, Imagen 4, AWS

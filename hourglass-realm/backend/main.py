@@ -49,7 +49,8 @@ def reset_game_state() -> Dict[str, Any]:
         'puzzle_1b': {
             'stage1_progress': {'CAR': False, 'HOUSE': False, 'LOVE': False, 'MONEY': False, 'FAMILY': False},
             'stage1_count': 0, 'completed_stage': 0, 'pins': [],
-        }
+        },
+        'complete': False,
     }
 
 # In-memory state (local only)
@@ -93,13 +94,15 @@ async def get_data(authorization: Optional[str] = Header(None)):
         'puzzle_1b': {
             'count': STATE['puzzle_1b']['stage1_count'],
             'pins': STATE['puzzle_1b']['pins']
-        }
+        },
+        'complete': STATE['complete'],
     }
 
 @app.post('/unlock')
 async def unlock(req: UnlockReq, authorization: Optional[str] = Header(None)):
     validate_session_token(authorization)
     if req.passphrase.strip().lower() == STATE['master_codes']['passphrase'].lower():
+        STATE['complete'] = True
         return JSONResponse({'unlocked': True})
     raise HTTPException(status_code=403, detail='Wrong passphrase')
 

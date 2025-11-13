@@ -1,4 +1,5 @@
 import logging, os, uuid
+import base64, re
 import uvicorn
 
 import boto3
@@ -53,6 +54,7 @@ def init_game_state():
                     'completed_stage': 0,
                     'pins': [],
                 },
+                'complete': False,
                 'version': 1,  # For optimistic locking
                 'created_at': datetime.now(timezone.utc).isoformat(),
                 'updated_at': datetime.now(timezone.utc).isoformat(),
@@ -142,6 +144,51 @@ def validate_admin_passphrase(authorization: Optional[str] = Header(None)) -> Di
     return state
 
 
+# ============== S3 Functions ==============
+
+s3_client = boto3.client('s3')
+
+def upload_response_to_s3(base64_image, chatbot_response):
+
+    # Skip uploading if environment variable is not set
+    bucket = os.getenv('S3_BUCKET_NAME', None)
+    if bucket is None: return
+
+    try:
+        match = re.match(r'data:image/(\w+);base64,(.+)', base64_image)
+        image_format, base64_string = match.groups()
+        image_bytes = base64.b64decode(base64_string)
+        
+        content_types = {
+            'png': 'image/png',
+            'jpeg': 'image/jpeg',
+            'jpg': 'image/jpeg',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        }
+        content_type = content_types.get(image_format.lower(), 'image/png')
+        current_datetime = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+        s3_client.put_object(
+            Bucket=bucket,
+            Key=f'data/{current_datetime}_drawing.{image_format.lower()}',
+            Body=image_bytes,
+            ContentType=content_type,
+        )
+
+        s3_client.put_object(
+            Bucket=bucket,
+            Key=f'data/{current_datetime}_response.txt',
+            Body=chatbot_response,
+        )
+        
+        return True
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+
+
 # ============== Startup ==============
 
 @asynccontextmanager
@@ -189,13 +236,16 @@ async def get_data(authorization: Optional[str] = Header(None)):
         'puzzle_1b': {
             'count': state['puzzle_1b']['stage1_count'],
             'pins': state['puzzle_1b']['pins']
-        }
+        },
+        'complete': state['complete'],
     }
 
 @app.post('/unlock')
 async def unlock(req: UnlockReq, authorization: Optional[str] = Header(None)):
     state = validate_session_token(authorization)
     if req.passphrase.strip().lower() == state['master_codes']['passphrase'].lower():
+        update_data = {'complete': True}
+        updated_data = update_game_state(update_data, version=state['version']) 
         return JSONResponse({'unlocked': True})
     raise HTTPException(status_code=403, detail='Wrong passphrase')
 
@@ -205,26 +255,27 @@ async def chatbot(req: ChatbotReq, authorization: Optional[str] = Header(None)):
     category, response = chatbot_pipeline(req.image_data, completed_stage=state['puzzle_1b']['completed_stage'])
     if category:
         update_data = {'puzzle_1b': deepcopy(state['puzzle_1b'])}
-        if state['puzzle_1b']['completed_stage'] == 0:
+        if update_data['puzzle_1b']['completed_stage'] == 0:
             category_str = category.value.upper()
-            if state['puzzle_1b']['stage1_progress'][category_str] is False:
+            if update_data['puzzle_1b']['stage1_progress'][category_str] is False:
                 update_data['puzzle_1b']['stage1_progress'][category_str] = True
                 update_data['puzzle_1b']['stage1_count'] += 1
-                if state['puzzle_1b']['stage1_count'] == 5:
+                if update_data['puzzle_1b']['stage1_count'] == 5:
                     response += "\n\nAll five drawings? Wowza! You did it! PIN time—uh, where did I put it again?"
                     update_data['puzzle_1b']['completed_stage'] = 1
                     update_data['puzzle_1b']['pins'].append(state['master_codes']['puzzle_1b_pins'][0])
                 else:
-                    response += f"\n\nYou've found the {category_str} drawing, only {5 - state['puzzle_1b']['stage1_count']} more—right? I think so!"
+                    response += f"\n\nYou've found the {category_str} drawing, only {5 - update_data['puzzle_1b']['stage1_count']} more—right? I think so!"
             else:
                 response += f"\n\nHeyyy, déjà blue! You’ve drawn {category_str} before—try something new!"
-        elif state['puzzle_1b']['completed_stage'] == 1:
+        elif update_data['puzzle_1b']['completed_stage'] == 1:
             response += '\n\nPIN? Oh! I already gave you one! …I think. Maybe. Probably?'
             if category == ObjectCategory2.JESUS:
                 response = ''
                 update_data['puzzle_1b']['completed_stage'] = 2
                 update_data['puzzle_1b']['pins'].append(state['master_codes']['puzzle_1b_pins'][1])
         updated_data = update_game_state(update_data, version=state['version'])
+    upload_response_to_s3(req.image_data, response)
     return {'response': response}
 
 @app.get('/admin')

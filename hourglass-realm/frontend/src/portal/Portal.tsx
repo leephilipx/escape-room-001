@@ -16,18 +16,20 @@ interface GameData {
   puzzle_1b: {
     count: number;
     pins: string[];
-  }
+  },
+  complete: boolean;
 }
 
 type PortalState = 'welcome' | 'main' | 'completed';
 
 const Portal: React.FC = () => {
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [messageToast, messageContextHolder] = message.useMessage();
   const [portalState, setPortalState] = useState<PortalState>((getCookie("portalState") as PortalState) || "welcome");
   const [portalToken, setPortalToken] = useState<string>(getCookie("portalToken") || '');
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [loading, setLoading] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [timeRemaining, setTimeRemaining] = useState<string>('00:00:00');
   const [passphrase, setPassphrase] = useState('');
   const [unlocked, setUnlocked] = useState(false);
   const [showHints, setShowHints] = useState(false);
@@ -41,6 +43,13 @@ const Portal: React.FC = () => {
     setCookie("portalState", portalState, 60);
     setCookie("portalToken", portalToken, 60);
   }, [portalState, portalToken]);
+
+  // Detect completion stage
+  useEffect(() => {
+    if (gameData?.complete) {
+      setUnlocked(true);
+    }
+  }, [gameData?.complete]);
 
   // Detect hints increase
   useEffect(() => {
@@ -88,6 +97,7 @@ const Portal: React.FC = () => {
       if (response.ok) {
         const data: GameData = await response.json();
         setGameData(data);
+        audioRef.current?.play();
       } else if (response.status === 403 || response.status === 401) {
         // Session expired or invalid
         setPortalState('welcome');
@@ -133,7 +143,7 @@ const Portal: React.FC = () => {
     if (gameData?.remaining_time) {
       const updateTimer = () => {
         const randomJitter = Math.floor((1.0-Math.random()) * 60); // -30 to 30 seconds
-        const time = unlocked ? '00:00:00' : calculateTimeRemaining(gameData.remaining_time, randomJitter);
+        const time = gameData.complete ? '00:00:00' : calculateTimeRemaining(gameData.remaining_time, randomJitter);
         setTimeRemaining(time);
       };
       updateTimer();
@@ -153,6 +163,7 @@ const Portal: React.FC = () => {
     if (unlocked) {
       setPortalState('completed');
       setLoading(false);
+      setPortalToken('');
       return;
     }
     try {
@@ -167,6 +178,7 @@ const Portal: React.FC = () => {
       if (response.ok) {
         setUnlocked(true);
         setPortalState('completed');
+        setPortalToken('');
       } else {
         messageToast.error('Incorrect passphrase');
       }
@@ -245,6 +257,12 @@ const Portal: React.FC = () => {
     return (
       <div className="main-container">
         {messageContextHolder}
+        <audio
+          ref={audioRef}
+          src={unlocked ? "/audio/journey.mp3" : "/audio/adriftamonginfinitestars.mp3"}
+          autoPlay
+          loop
+        />
         <div className="image-background"></div>
         <div className="particles-background">
           {[...Array(30)].map((_, i) => (
@@ -388,11 +406,15 @@ const Portal: React.FC = () => {
   // Completion Screen
   if (portalState === 'completed') {
 
-    console.log(unlocked);
-
     return (
       <div className="welcome-container">
         {messageContextHolder}
+        <audio
+          ref={audioRef}
+          src={"/audio/journey.mp3"}
+          autoPlay
+          loop
+        />
         <div className="image-background"></div>
         <div className="particles-background">
           {[...Array(50)].map((_, i) => (

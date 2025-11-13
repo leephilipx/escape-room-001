@@ -208,7 +208,7 @@ const AdminPanel: React.FC = () => {
 
       <div className="main-content admin-content">
         <Card title="Admin Control Panel">
-          <Spin spinning={loadingGet}>
+          <Spin spinning={loadingGet || loadingPost || loadingReset}>
             {/* 1. Admin Passphrase */}
             <Card type="inner" title="1. Admin Authentication" style={{ marginBottom: '24px' }}>
               <Form layout="vertical">
@@ -226,30 +226,28 @@ const AdminPanel: React.FC = () => {
             {/* 2. GET and POST Buttons */}
             <Card type="inner" title="2. Data Operations" style={{ marginBottom: '24px' }}>
               <Row gutter={[24, 12]}>
-                <Col xs={24} sm={12}>
+                <Col xs={24} sm={!adminData ? 24 : 12}>
                   <Button
                     style={{ width: '100%' }}
                     type="primary"
                     icon={<CloudDownloadOutlined />}
                     onClick={handleGet}
-                    loading={loadingGet}
-                    disabled={loadingGet}
                   >
                     GET Admin Data
                   </Button>
                 </Col>
-                <Col xs={24} sm={12}>
-                  <Button
-                    style={{ width: '100%' }}
-                    type="primary"
-                    icon={<CloudUploadOutlined />}
-                    onClick={handlePost}
-                    loading={loadingPost}
-                    disabled={!adminData || loadingGet || loadingPost || loadingReset}
-                  >
-                    POST Updated Data
-                  </Button>
-                </Col>
+                {adminData && (
+                  <Col xs={24} sm={12}>
+                    <Button
+                      style={{ width: '100%' }}
+                      type="primary"
+                      icon={<CloudUploadOutlined />}
+                      onClick={handlePost}
+                    >
+                      POST Updated Data
+                    </Button>
+                  </Col>
+                )}
               </Row>
             </Card>
 
@@ -354,8 +352,6 @@ const AdminPanel: React.FC = () => {
                       type="primary"
                       icon={<CloudUploadOutlined />}
                       onClick={handlePost}
-                      loading={loadingPost}
-                      disabled={loadingGet || loadingPost || loadingReset}
                     >
                       Save All Changes
                     </Button>
@@ -363,10 +359,10 @@ const AdminPanel: React.FC = () => {
                     <Col xs={24}>
                     <Button
                       style={{ width: '100%' }}
+                      type="primary"
                       icon={<WarningOutlined />}
                       onClick={handleReset}
-                      loading={loadingReset}
-                      disabled={loadingGet || loadingPost || loadingReset}
+                      className="reset-button"
                     >
                       Reset Game Data
                     </Button>
