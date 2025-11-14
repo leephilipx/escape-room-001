@@ -38,7 +38,7 @@ const Credits: React.FC = () => {
                 <Text strong>Intro Video:</Text>
               </Col>
               <Col xs={24} sm={18}>
-                <Text>Veo 3.1, Lyria 2, Clipchamp</Text>
+                <Text>Clipchamp, Lyria 2, Veo 3.1</Text>
               </Col>
             </Row>
             <Row gutter={[24, 12]}>
@@ -46,7 +46,7 @@ const Credits: React.FC = () => {
                 <Text strong>Hourglass Realm Portal:</Text>
               </Col>
               <Col xs={24} sm={18}>
-                <Text>AWS, Imagen 4, ChatGPT, Claude Haiku 4.5</Text>
+                <Text>AWS, ChatGPT, Claude Haiku 4.5, Gemini 2.5 Flash, Imagen 4</Text>
               </Col>
             </Row>
             <Row gutter={[24, 12]}>
@@ -61,7 +61,7 @@ const Credits: React.FC = () => {
         </Card>
 
         <Paragraph style={{ marginTop: '24px', textAlign: 'center' }}>
-          <Text>Made with ❤️ by &copy; Philip 2025</Text>
+          <Text>Made with ❤️ by &copy; Philip 2025 &nbsp;|&nbsp; <a href='https://github.com/leephilipx/escape-room-001/' target='_blank'>GitHub Project</a></Text>
         </Paragraph>
       </div>
     </div>
