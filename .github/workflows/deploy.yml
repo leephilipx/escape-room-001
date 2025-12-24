@@ -15,14 +15,19 @@ jobs:
         with:
           node-version: 20
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        working-directory: hourglass-realm/frontend
+        run: npm ci
+
+      - name: Build project
+        working-directory: hourglass-realm/frontend
+        run: npm run build
 
       - name: Deploy to apps site
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.APPS_SITE_TOKEN }}
           external_repository: leephilipx/leephilipx.github.io
-          publish_dir: ./dist
-          destination_dir: apps/journal-vault
+          publish_dir: ./hourglass-realm/frontend/dist
+          destination_dir: apps/hourglass-realm
           keep_files: true
