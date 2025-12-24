@@ -28,7 +28,7 @@ jobs:
         with:
           personal_token: ${{ secrets.APPS_SITE_TOKEN }}
           external_repository: leephilipx/leephilipx.github.io
-          publish_branch: main
+          publish_branch: master
           publish_dir: ./hourglass-realm/frontend/dist
           destination_dir: apps/hourglass-realm
           keep_files: true
