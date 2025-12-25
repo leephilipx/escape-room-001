@@ -1,11 +1,12 @@
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Portal from './portal/Portal'
 import Admin from './portal/Admin'
 import Credits from './portal/Credits';
+import { APP_BASE_PATH } from './utils/constants';
 
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter basename={APP_BASE_PATH.replace(/\/+$/, '')}>
       <Routes>
         <Route path="/" element={<Portal />} />
         <Route path="/admin" element={<Admin />} />
@@ -15,7 +16,7 @@ function App() {
           element={<Navigate to="/" replace />}
         />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 

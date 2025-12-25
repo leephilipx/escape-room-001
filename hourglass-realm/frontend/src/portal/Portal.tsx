@@ -5,7 +5,8 @@ import { BulbOutlined, FieldTimeOutlined, LockOutlined, QuestionOutlined, RiseOu
 import ChatbotModal from './ChatbotModal';
 import { setCookie, getCookie } from '../utils/cookie';
 import { API_BASE_URL, POLL_INTERVAL } from '../utils/constants';
-import './Portal.css'
+import { openNewTabLink } from '../utils/shared';
+import './Portal.css';
 import '../styles/antd-override.css';
 import '../styles/background.css';
 import '../styles/glitch.css';
@@ -240,10 +241,9 @@ const Portal: React.FC = () => {
             type="default"
             tooltip="Credits"
             shape="circle"
-            href="/#/credits"
-            target="_blank"
             icon={<QuestionOutlined />}
             className="credits-button"
+            onClick={() => openNewTabLink("credits")}
           >
             Credits
           </FloatButton>
@@ -391,10 +391,9 @@ const Portal: React.FC = () => {
               type="default"
               tooltip="Credits"
               shape="circle"
-              href="/#/credits"
-              target="_blank"
               icon={<QuestionOutlined />}
               className="credits-button"
+              onClick={() => openNewTabLink("credits")}
             >
               Credits
             </FloatButton>
@@ -405,7 +404,6 @@ const Portal: React.FC = () => {
 
   // Completion Screen
   if (portalState === 'completed') {
-
     return (
       <div className="welcome-container">
         {messageContextHolder}
@@ -451,10 +449,9 @@ const Portal: React.FC = () => {
               type="default"
               tooltip="Credits"
               shape="circle"
-              href="/#/credits"
-              target="_blank"
               icon={<QuestionOutlined />}
               className="credits-button"
+              onClick={() => openNewTabLink("credits")}
             >
               Credits
             </FloatButton>

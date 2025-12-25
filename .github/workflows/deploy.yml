@@ -21,7 +21,12 @@ jobs:
 
       - name: Build project
         working-directory: hourglass-realm/frontend
-        run: npm run build
+        env:
+          VITE_APP_BASE_PATH: ${{ vars.VITE_APP_BASE_PATH }}
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
+        run: |
+          npm run build
+          touch dist/.nojekyll
 
       - name: Deploy to apps site
         uses: peaceiris/actions-gh-pages@v4
