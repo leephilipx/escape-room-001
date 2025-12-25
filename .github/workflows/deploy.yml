@@ -1,4 +1,4 @@
-name: Deploy to User Site
+name: Deploy to Apps Site
 
 on:
   push:

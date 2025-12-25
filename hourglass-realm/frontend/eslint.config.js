@@ -8,7 +8,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   globalIgnores(['dist']),
   {
-    base: '/apps/journal-vault/',
+    base: '/apps/hourglass-realm/',
     files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
