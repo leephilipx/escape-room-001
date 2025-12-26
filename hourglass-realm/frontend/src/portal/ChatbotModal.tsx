@@ -3,6 +3,7 @@ import { Modal, Button, Row, Col, message } from 'antd';
 import { CheckOutlined, DeleteOutlined, LockOutlined, UploadOutlined } from '@ant-design/icons';
 import './ChatbotModal.css';
 import { API_BASE_URL, CHATBOT_MESSAGES } from '../utils/constants';
+import ImageTreasureGuardian from '../assets/images/avatar-treasure-guardian.jpg';
 
 interface ChatbotModalProps {
   visible: boolean;
@@ -206,7 +207,7 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
         <Col xs={24} md={12}>
           <div className="bot-message-container">
             <div className="bot-avatar">
-              <img src="/images/avatar-treasure-guardian.jpg" alt="Treasure Guardian" />
+              <img src={ImageTreasureGuardian} alt="Treasure Guardian" />
             </div>
             <div className="bot-message">
               {CHATBOT_MESSAGES[pins.length]}
@@ -215,7 +216,7 @@ const ChatbotModal: React.FC<ChatbotModalProps> = ({ visible, onClose, progressC
           {botMessage && (
             <div className="bot-message-container">
               <div className="bot-avatar">
-                <img src="/images/avatar-treasure-guardian.jpg" alt="Treasure Guardian" />
+                <img src={ImageTreasureGuardian} alt="Treasure Guardian" />
               </div>
               <div className="bot-message">
                 {botMessage}

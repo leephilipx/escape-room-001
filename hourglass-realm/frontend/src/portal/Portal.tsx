@@ -5,11 +5,13 @@ import { BulbOutlined, FieldTimeOutlined, LockOutlined, QuestionOutlined, RiseOu
 import ChatbotModal from './ChatbotModal';
 import { setCookie, getCookie } from '../utils/cookie';
 import { API_BASE_URL, POLL_INTERVAL } from '../utils/constants';
-import { openRelativeNewTab } from '../utils/shared';
+import { resolvePathwithBase } from '../utils/shared';
 import './Portal.css';
 import '../styles/antd-override.css';
 import '../styles/background.css';
 import '../styles/glitch.css';
+import audioFileJourney from '../assets/audio/journey.mp3';
+import audioFileAdrift from '../assets/audio/adriftamonginfinitestars.mp3';
 
 interface GameData {
   remaining_time: string;
@@ -240,10 +242,11 @@ const Portal: React.FC = () => {
           <FloatButton
             type="default"
             tooltip="Credits"
+            href={resolvePathwithBase("credits")}
+            target='_blank'
             shape="circle"
             icon={<QuestionOutlined />}
             className="credits-button"
-            onClick={() => openRelativeNewTab("credits")}
           >
             Credits
           </FloatButton>
@@ -259,7 +262,7 @@ const Portal: React.FC = () => {
         {messageContextHolder}
         <audio
           ref={audioRef}
-          src={unlocked ? "/audio/journey.mp3" : "/audio/adriftamonginfinitestars.mp3"}
+          src={unlocked ? audioFileJourney : audioFileAdrift}
           autoPlay
           loop
         />
@@ -390,10 +393,11 @@ const Portal: React.FC = () => {
             <FloatButton
               type="default"
               tooltip="Credits"
-              shape="circle"
+              href={resolvePathwithBase("credits")}
+              target='_blank'
+              shape="circle"              
               icon={<QuestionOutlined />}
               className="credits-button"
-              onClick={() => openRelativeNewTab("credits")}
             >
               Credits
             </FloatButton>
@@ -409,7 +413,7 @@ const Portal: React.FC = () => {
         {messageContextHolder}
         <audio
           ref={audioRef}
-          src={"/audio/journey.mp3"}
+          src={audioFileJourney}
           autoPlay
           loop
         />
@@ -448,10 +452,11 @@ const Portal: React.FC = () => {
             <FloatButton
               type="default"
               tooltip="Credits"
+              href={resolvePathwithBase("credits")}
+              target='_blank'
               shape="circle"
               icon={<QuestionOutlined />}
               className="credits-button"
-              onClick={() => openRelativeNewTab("credits")}
             >
               Credits
             </FloatButton>

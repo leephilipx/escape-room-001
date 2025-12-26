@@ -1,6 +1,7 @@
-export const openRelativeNewTab = (path: string) => {
-  const base = window.location.pathname.endsWith("/")
-    ? window.location.pathname
-    : window.location.pathname + "/";
-  window.open(base + path, "_blank");
+import { APP_BASE_PATH } from './constants'
+
+export const resolvePathwithBase = (path: string): string => {
+  const domain = window.location.origin;
+  const basePath = APP_BASE_PATH.replace(/\/+$/, ''); // Remove trailing slashes
+  return `${domain}${basePath}/${path.replace(/^\/+/, '')}`; // Remove leading slashes
 };

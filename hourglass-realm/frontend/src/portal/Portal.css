@@ -13,7 +13,7 @@ body {
 
 @font-face {
   font-family: 'NightmarePills';
-  src: url('/fonts/NightmarePills-BV2w.ttf') format('truetype');
+  src: url('../assets/fonts/NightmarePills-BV2w.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
