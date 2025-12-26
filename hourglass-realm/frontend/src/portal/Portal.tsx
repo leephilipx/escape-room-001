@@ -5,7 +5,7 @@ import { BulbOutlined, FieldTimeOutlined, LockOutlined, QuestionOutlined, RiseOu
 import ChatbotModal from './ChatbotModal';
 import { setCookie, getCookie } from '../utils/cookie';
 import { API_BASE_URL, POLL_INTERVAL } from '../utils/constants';
-import { openNewTabLink } from '../utils/shared';
+import { openRelativeNewTab } from '../utils/shared';
 import './Portal.css';
 import '../styles/antd-override.css';
 import '../styles/background.css';
@@ -243,7 +243,7 @@ const Portal: React.FC = () => {
             shape="circle"
             icon={<QuestionOutlined />}
             className="credits-button"
-            onClick={() => openNewTabLink("credits")}
+            onClick={() => openRelativeNewTab("credits")}
           >
             Credits
           </FloatButton>
@@ -393,7 +393,7 @@ const Portal: React.FC = () => {
               shape="circle"
               icon={<QuestionOutlined />}
               className="credits-button"
-              onClick={() => openNewTabLink("credits")}
+              onClick={() => openRelativeNewTab("credits")}
             >
               Credits
             </FloatButton>
@@ -451,7 +451,7 @@ const Portal: React.FC = () => {
               shape="circle"
               icon={<QuestionOutlined />}
               className="credits-button"
-              onClick={() => openNewTabLink("credits")}
+              onClick={() => openRelativeNewTab("credits")}
             >
               Credits
             </FloatButton>

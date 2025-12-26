@@ -1,4 +1,4 @@
-export const openNewTabLink = (path: string) => {
+export const openRelativeNewTab = (path: string) => {
   const base = window.location.pathname.endsWith("/")
     ? window.location.pathname
     : window.location.pathname + "/";
